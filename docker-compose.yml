@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  agentboost-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentboost_app
+    restart: always
+    ports:
+      - "5173:5173"
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=file:./dev.db
+      - RAZORPAY_KEY_ID=rzp_test_TUojyyzKJGFLWv
+      - RAZORPAY_KEY_SECRET=9p5WhChmL5DPoIssSxQ5h3Vc
+      - RAZORPAY_WEBHOOK_SECRET=whsec_test_demo_webhook_99812
+      - WEBHOOK_MAX_EVENT_AGE_SECONDS=300
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentboost_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: agentboost_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

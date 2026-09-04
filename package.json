@@ -1,0 +1,46 @@
+{
+  "name": "agentboost-razorpay",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:web": "vite",
+    "dev:api": "tsx src/server.ts",
+    "api": "tsx src/server.ts",
+    "seed": "tsx scripts/seed.ts",
+    "test": "vitest run",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@prisma/client": "^5.22.0",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.12.1",
+    "fastify-raw-body": "^6.0.1",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.474.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^22.20.1",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.2",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.12",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^4.1.11"
+  }
+}
