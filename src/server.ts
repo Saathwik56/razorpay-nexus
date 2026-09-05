@@ -17,7 +17,11 @@ const prisma = new PrismaClient();
 const server: FastifyInstance = Fastify({ logger: true });
 
 // Register plugins
-server.register(cors, { origin: '*' });
+server.register(cors, {
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-razorpay-signature', 'x-razorpay-event-id']
+});
 server.register(fastifyRawBody, {
   field: 'rawBody',
   global: false,

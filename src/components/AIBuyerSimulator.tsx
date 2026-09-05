@@ -303,8 +303,30 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
           </div>
         )}
 
+        {/* Quick Sample Prompt Chips */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+          <span className="text-[10px] font-mono font-bold text-slate-400 self-center uppercase mr-1">Sample Prompts:</span>
+          {[
+            'Post-workout recovery products under ₹3000',
+            'Wireless earbuds under ₹5000',
+            'Whey protein isolate'
+          ].map(sample => (
+            <button
+              key={sample}
+              type="button"
+              onClick={() => {
+                setInputQuery(sample);
+                handleSendQuery(sample);
+              }}
+              className="text-[11px] font-mono bg-blue-50/80 hover:bg-blue-100 text-[#0f63ed] border border-blue-200/80 px-2.5 py-1 rounded-lg transition-all cursor-pointer hover:shadow-sm"
+            >
+              {sample}
+            </button>
+          ))}
+        </div>
+
         {/* Input Bar */}
-        <div className="pt-2 border-t border-slate-100 flex items-center space-x-2">
+        <div className="pt-2 flex items-center space-x-2">
           <input
             type="text"
             value={inputQuery}
@@ -315,7 +337,7 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
           />
           <button
             onClick={() => handleSendQuery(inputQuery)}
-            className="saas-button-primary py-2.5 px-4 flex items-center space-x-1.5"
+            className="saas-button-primary py-2.5 px-4 flex items-center space-x-1.5 cursor-pointer"
           >
             <span>Ask AI</span>
             <Send className="w-3.5 h-3.5" />
