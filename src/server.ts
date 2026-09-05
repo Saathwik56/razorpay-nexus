@@ -627,6 +627,9 @@ server.post('/api/agent-commerce/gemini-search', async (req: FastifyRequest, rep
   // Call Gemini API if key is configured
   if (geminiKey && query) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
       const geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
         {
@@ -650,9 +653,11 @@ JSON response:`
               }]
             }],
             generationConfig: { temperature: 0.1, maxOutputTokens: 256 }
-          })
+          }),
+          signal: controller.signal
         }
       );
+      clearTimeout(timeoutId);
 
       if (geminiRes.ok) {
         const geminiData = await geminiRes.json();

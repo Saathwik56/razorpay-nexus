@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bot, 
   Send, 
@@ -40,6 +40,12 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
 
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   const [matchedProducts, setMatchedProducts] = useState<Product[]>([]);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll chat to bottom whenever messages change or AI is thinking
+  useEffect(() => {
+    chatScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isThinking]);
   
   const getSavedPolicyConfig = () => {
     if (typeof window !== 'undefined') {
@@ -82,12 +88,17 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
     let gotBackendResult = false;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
       // Try Gemini-powered NL search first
       const res = await fetch(getApiUrl('/api/agent-commerce/gemini-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: textToSearch })
+        body: JSON.stringify({ query: textToSearch }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -295,6 +306,7 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
                 </div>
               </div>
             ))}
+            <div ref={chatScrollRef} />
           </div>
 
         {/* Live As-You-Type Recommendations Dropdown */}
