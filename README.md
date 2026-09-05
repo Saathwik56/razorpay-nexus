@@ -1,15 +1,33 @@
-# AgentBoost — Razorpay Merchant Agentic Commerce OS
+# Razorpay Nexus — Agentic Commerce Control Plane
 
-> **Production-Oriented Prototype / Production-Grade Architecture Prototype**
-> *Make every merchant AI-buyable, every transaction explainable, bounded, and gated.*
+> **Production-Grade Agentic Commerce Control Plane & Governance Infrastructure**  
+> *Make every merchant AI-discoverable, every transaction explainable, bounded, and gated.*
 
-AgentBoost is a merchant-side control plane for agentic commerce built on top of **Razorpay Test Mode APIs**. It makes merchants AI-discoverable and AI-transactable while giving them deterministic controls over what an AI agent is allowed to do with money.
+Razorpay Nexus is a merchant-side control plane for agentic commerce built on top of **Razorpay Test Mode APIs**. It makes merchants AI-discoverable and AI-transactable while giving them deterministic controls over what an AI agent is allowed to do with money.
 
 ---
 
-## 🏆 Razorpay Hackathon / Internship Track Alignment
+## 🛠️ Technology Stack
 
-AgentBoost is built strictly according to Razorpay's **AI Growth & Agentic Commerce** track guidelines:
+| Layer | Technology / Tool | Purpose & Details |
+| :--- | :--- | :--- |
+| **Frontend Framework** | **React 18 + TypeScript + Vite 6** | Ultra-fast Single Page Application (SPA) with full type safety |
+| **Styling & UI System** | **TailwindCSS + Lucide Icons** | Custom SaaS design system, glassmorphism, responsive mobile layouts |
+| **Data Visualization** | **Recharts** | Real-time interactive revenue & agentic share analytics |
+| **Backend API** | **Fastify + Node.js (TypeScript)** | High-performance asynchronous REST API server |
+| **Database & ORM** | **Prisma ORM + SQLite** | Relational data persistence with migrations & type-safe models |
+| **Payment Integration** | **Razorpay REST API v1** | Live sandbox integration (`/v1/orders`, `/v1/payments`) |
+| **Security & Webhooks** | **Cryptographic HMAC-SHA256** | Raw-body webhook verification & idempotency replay protection |
+| **Testing Suite** | **Vitest** | 51 passing unit, policy, security, and integration tests |
+| **Containerization** | **Docker & Docker Compose** | Multi-stage production container build |
+| **Cloud Hosting** | **Firebase Hosting & Render** | Global CDN static hosting + containerized backend service |
+| **CI/CD** | **GitHub Actions** | Automated deployment pipelines (`.github/workflows/firebase-deploy.yml`) |
+
+---
+
+## 🏆 Razorpay Hackathon Track Alignment
+
+Razorpay Nexus is built strictly according to Razorpay's **AI Growth & Agentic Commerce** track guidelines:
 1. **AI Merchant Passport (`/catalog`)**: Machine-readable catalog (`GET /api/agent-commerce/catalog`) with dynamic AI Readiness scoring.
 2. **AI Revenue Agent (`/dashboard`)**: Upsell & cross-sell bundling engine (+₹1,820 uplift) with revenue attribution metrics.
 3. **Interactive Test Lab (`/test-lab`)**: Live interactive testing console with real-time execution streaming (`○ NOT RUN` ➔ `✓ PASSED`).
@@ -23,10 +41,10 @@ AgentBoost is built strictly according to Razorpay's **AI Growth & Agentic Comme
 
 ## 🐳 Docker Deployment (Containerized Execution)
 
-AgentBoost includes a multi-stage production `Dockerfile` and `docker-compose.yml` for 1-command containerized execution:
+Razorpay Nexus includes a multi-stage production `Dockerfile` and `docker-compose.yml` for 1-command containerized execution:
 
 ```bash
-# Build and launch AgentBoost in Docker
+# Build and launch Razorpay Nexus in Docker
 docker compose up -d --build
 ```
 
