@@ -67,15 +67,17 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
     : [];
 
   const handleSendQuery = async (queryText?: string) => {
-    const userText = (queryText !== undefined && queryText !== null) ? queryText : inputQuery;
-    if (!userText || !userText.trim()) return;
+    const textToSearch = (typeof queryText === 'string' && queryText.trim()) 
+      ? queryText.trim() 
+      : inputQuery.trim();
 
-    const queryToExecute = userText.trim();
+    if (!textToSearch) return;
+
     setInputQuery('');
     setIsThinking(true);
     setLastGeminiIntent(null);
 
-    setMessages(prev => [...prev, { sender: 'user', text: queryToExecute }]);
+    setMessages(prev => [...prev, { sender: 'user', text: textToSearch }]);
 
     let gotBackendResult = false;
 
@@ -84,12 +86,12 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
       const res = await fetch(getApiUrl('/api/agent-commerce/gemini-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: queryToExecute })
+        body: JSON.stringify({ query: textToSearch })
       });
 
       if (res.ok) {
         const data = await res.json();
-        if (data.matchedProducts) {
+        if (data && data.matchedProducts) {
           gotBackendResult = true;
           setMatchedProducts(data.matchedProducts || []);
 
@@ -115,7 +117,7 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
                 sender: 'agent',
                 text: data.matchedProducts?.length
                   ? `Matched ${data.matchedProducts.length} item(s): ${data.matchedProducts.map((p: any) => p.name).join(', ')}.`
-                  : `No exact matches found for "${queryToExecute}". Try: protein, whey, earbuds, watch, shoes.`
+                  : `No exact matches found for "${textToSearch}". Try: protein, whey, earbuds, watch, shoes.`
               }
             ]);
           }
@@ -130,7 +132,7 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
     // Local fallback if backend result wasn't retrieved
     if (!gotBackendResult) {
       const activePolicyEngine = new PolicyEngine(getSavedPolicyConfig());
-      const searchResult = aiAgentEngine.processBuyerQuery(queryToExecute, activePolicyEngine);
+      const searchResult = aiAgentEngine.processBuyerQuery(textToSearch, activePolicyEngine);
       setMatchedProducts(searchResult.matchedProducts);
       if (searchResult.quote) {
         setActiveQuote(searchResult.quote);
@@ -354,24 +356,32 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
           ))}
         </div>
 
-        {/* Input Bar */}
-        <div className="pt-2 flex items-center space-x-2">
+        {/* Input Form (Handles Enter key & multi-turn conversations cleanly) */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!isThinking) {
+              handleSendQuery();
+            }
+          }}
+          className="pt-2 flex items-center space-x-2"
+        >
           <input
             type="text"
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSendQuery(inputQuery)}
             placeholder="Type any shopping query or product request..."
             className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#0f63ed] focus:bg-white transition-all font-['Inter']"
           />
           <button
-            onClick={() => handleSendQuery(inputQuery)}
-            className="saas-button-primary py-2.5 px-4 flex items-center space-x-1.5 cursor-pointer"
+            type="submit"
+            disabled={isThinking}
+            className="saas-button-primary py-2.5 px-4 flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>Ask AI</span>
             <Send className="w-3.5 h-3.5" />
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );
