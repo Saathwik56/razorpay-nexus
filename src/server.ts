@@ -22,6 +22,27 @@ server.register(fastifyRawBody, {
   runFirst: true,
 });
 
+// Root Route & Health Welcome Endpoint
+server.get('/', async (req: FastifyRequest, reply: FastifyReply) => {
+  return reply.status(200).send({
+    success: true,
+    status: 'ONLINE',
+    service: 'Razorpay Nexus Fastify API',
+    description: 'Agentic Commerce Control Plane & Governance Engine',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      catalog: '/api/agent-commerce/catalog',
+      audit: '/api/audit',
+      policies: '/api/policies'
+    }
+  });
+});
+
+server.head('/', async (req: FastifyRequest, reply: FastifyReply) => {
+  return reply.status(200).send();
+});
+
 // Response Helpers
 const sendSuccess = (reply: FastifyReply, data: any, statusCode: number = 200) => {
   return reply.status(statusCode).send({ success: true, ...data });
