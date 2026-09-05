@@ -42,9 +42,6 @@ server.get('/', async (req: FastifyRequest, reply: FastifyReply) => {
   });
 });
 
-server.head('/', async (req: FastifyRequest, reply: FastifyReply) => {
-  return reply.status(200).send();
-});
 
 // Response Helpers
 const sendSuccess = (reply: FastifyReply, data: any, statusCode: number = 200) => {
