@@ -1,23 +1,3 @@
-================================================================================
-RAZORPAY NEXUS — COMPLETE EXHAUSTIVE 5-MINUTE PITCH SCRIPT & ALL UI DETAILS
-================================================================================
-Live App URL       : https://razorpay-nexus.web.app
-Live Backend API   : https://razorpay-nexus.onrender.com
-GitHub Repository  : https://github.com/Saathwik56/razorpay-nexus
-
-================================================================================
-SECTION 1: NAVBAR & TOP DEMO CONTROL BAR (0:00 - 0:35)
-================================================================================
-[PAGE / COMPONENT]
-Top Navigation Bar (Navbar.tsx) & Demo Control Bar (DemoControlBar.tsx)
-
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- Header Logo: "Razorpay Nexus" with gradient badge "Agentic Control Plane"
-- Global Live System Status Pill: Displays green "ONLINE (6/6 Subsystems Green)"
-- Demo Control Bar Buttons:
-  * "Reset Demo State" button (resets sample orders & policies)
-  * "API Credentials" key icon button (opens Razorpay key config modal)
-  * Navigation Tabs: Overview, AI Catalog Passport, Policy Center, AI Buyer Simulator, Revenue Dashboard, Audit Trail, Test Lab, System Health.
 
 [VOICEOVER SCRIPT]
 "Hi everyone! Welcome to Razorpay Nexus — the production-grade Agentic Commerce 
@@ -33,22 +13,25 @@ live. Let's explore every layer of this control plane."
 2. Click the "API Credentials" key button on the Navbar to show the quick modal, 
    then close it.
 
+================================================================================
+SECTION 5: REVENUE DASHBOARD & AGENTIC ANALYTICS (3:00 - 3:45)
+================================================================================
+
+
+[VOICEOVER SCRIPT]
+"In the Merchant Revenue Dashboard, merchants track the commercial impact of AI 
+buyers."
+
+
+   Voiceover: "Here we track exact revenue share — showing 28.5% of total GMV 
+   driven by AI agents versus direct human checkouts."   
+
+
 
 ================================================================================
 SECTION 2: OVERVIEW & AI CATALOG PASSPORT (0:35 - 1:15)
 ================================================================================
-[PAGE / COMPONENT]
-Overview / AI Catalog Passport (AICatalogPassport.tsx)
 
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- Architectural Pillars Overview: Bounded Quote Engine, Policy Engine, State Machine.
-- Product Catalog Grid with AI Discovery Badges:
-  * Product Cards (Wireless Earbuds, Fitness Watch, Protein Powder, Whey Isolate)
-  * Price tags, Inventory stock levels, Category tags, AI-discoverable status pills.
-- Merchant UCP Schema & AI Passport Metadata Card:
-  * Autonomous Commerce Permission: ENABLED
-  * Max Autonomous Purchase Limit: ₹50,000
-  * Agent Auth Protocol: HMAC-SHA256 Signed Quotes
 
 [VOICEOVER SCRIPT]
 "First is the AI Catalog Passport. Before an AI agent can purchase from a merchant, 
@@ -71,31 +54,16 @@ SECTION 3: POLICY CENTER & GOVERNANCE RULES (1:15 - 2:05)
 [PAGE / COMPONENT]
 Policy Center (PolicyCenter.tsx)
 
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- Financial Rules Inputs:
-  * Max Single Order Amount (default ₹50,000)
-  * Max Daily Autonomous GMV (default ₹2,00,000)
-  * Max Auto Discount Percentage (default 15%)
-  * Human Approval Threshold (default ₹10,000)
-- Category Permission Toggles:
-  * Fitness (Enabled), Electronics (Enabled), Apparel (Enabled), Alcohol (Disabled)
-- Risk Score Gating Slider (Max Allowed Risk: 0.25)
-- Action Buttons:
-  * "Save Policy Rules" button
-  * "Simulate Policy Check" button
 
 [VOICEOVER SCRIPT]
 "Next is the Policy Center, where merchants define deterministic business rules. 
 Merchants can adjust single order limits, set daily autonomous spending caps, and 
 gate sensitive product categories."
 
-[EXACT ACTIONS / BUTTON CLICKS]
-1. Click on the "Policy Center" tab.
-2. Click the "Max Single Order Limit" input box, change `50000` to `30000`.
-3. Toggle the "Alcohol Category" switch to OFF (Disabled).
-4. Click the blue button: "Save Policy Rules".
+
+
    Voiceover: "The policy parameters update instantly in SQLite via Prisma."
-5. Click the button: "Simulate Policy Check".
+
    Voiceover: "The Policy Engine evaluates all 10 deterministic rules in under 
    2 milliseconds, returning a clean ALLOW or DENY verdict."
 
@@ -103,69 +71,26 @@ gate sensitive product categories."
 ================================================================================
 SECTION 4: AI BUYER SIMULATOR WITH GEMINI 1.5 FLASH (2:05 - 3:00)
 ================================================================================
-[PAGE / COMPONENT]
-AI Buyer Simulator (AIBuyerSimulator.tsx)
 
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- Preset Prompt Chips:
-  * "Post-workout recovery products under ₹3000"
-  * "Noise cancelling earbuds under ₹5000"
-  * "Bulk Wine orders for ₹80,000"
-- Natural Language Input Box & "Powered by Gemini 1.5 Flash" badge
-- Agent Thinking State & Parsed Intent Pills (Keywords, Category, Max Price)
-- Cryptographic Bounded Quote Card (10-minute TTL expiry countdown timer)
-- Customer Explicit Consent Modal / Prompt
-- Razorpay Sandbox Checkout Execution Card (Displays Razorpay Order ID & Payment State)
-- "Reset Agent Chat" button
 
 [VOICEOVER SCRIPT]
 "Now let's test an autonomous AI buyer. The buyer types a natural language request: 
 'I need post-workout recovery products under ₹3000'."
 
-[EXACT ACTIONS / BUTTON CLICKS]
-1. Click on the "AI Buyer Simulator" tab.
+
 2. Click the preset prompt chip: "Post-workout recovery products under ₹3000".
 3. Click the button: "Run AI Buyer Query".
    Voiceover: "Nexus sends the query to Gemini 1.5 Flash, which parses intent into 
    structured keywords, category 'Fitness', and max price ₹3,000."
-4. Highlight the "Powered by Gemini 1.5 Flash" badge and parsed intent pills.
-5. Click the button: "Generate Bounded Quote & Place Order".
+
+
    Voiceover: "Nexus generates a 10-minute cryptographically signed quote, 
    validates it against policy rules, prompts for user consent, and executes the 
    order on Razorpay Sandbox — returning a live Razorpay Order ID."
 6. Click "Reset Agent Chat" to clear the screen.
 
 
-================================================================================
-SECTION 5: REVENUE DASHBOARD & AGENTIC ANALYTICS (3:00 - 3:45)
-================================================================================
-[PAGE / COMPONENT]
-Revenue Dashboard (RevenueDashboard.tsx)
 
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- KPI Metric Cards:
-  * Total Gross Merchandise Value (GMV)
-  * Agentic Revenue (GMV generated by AI agents)
-  * Quote Conversion Rate %
-  * Policy Execution Pass Rate %
-- Revenue Growth Area Chart (Recharts) with Time Range Filter Pills (7D, 30D, 90D)
-- Agentic vs. Human Revenue Donut/Pie Chart with interactive segment tooltips
-- Policy Health & ROI Upside Widget
-- "Refresh Dashboard Data" button
-
-[VOICEOVER SCRIPT]
-"In the Merchant Revenue Dashboard, merchants track the commercial impact of AI 
-buyers."
-
-[EXACT ACTIONS / BUTTON CLICKS]
-1. Click on the "Revenue Dashboard" tab.
-2. Click the time range pill: "30 Days" to refresh the revenue area chart.
-3. Hover your mouse over the blue "Agentic Orders" segment on the Agentic vs. Human 
-   Revenue Pie Chart.
-   Voiceover: "Here we track exact revenue share — showing 28.5% of total GMV 
-   driven by AI agents versus direct human checkouts."
-4. Point to the "Policy Pass Rate: 99.9%" KPI card.
-5. Click the button: "Refresh Dashboard Data".
 
 
 ================================================================================
@@ -174,24 +99,15 @@ SECTION 6: AUDIT TRAIL & INTERACTIVE TEST LAB (3:45 - 4:30)
 [PAGE / COMPONENT]
 Audit Trail (AuditTrailView.tsx) & Test Lab (TestLabView.tsx)
 
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- Audit Log Stream & Search Bar
-- Actor Filter Pills: ALL, USER, AI_BUYER, POLICY_ENGINE, WEBHOOK, SYSTEM
-- Expandable Audit Log Rows: Shows raw JSON Prompt, Gemini Intent, Policy Verdict, 
-  HMAC Signature verification status.
-- Interactive Compliance Test Lab:
-  * Preset Test Case Selectors (Single Order Limit Exceeded, Restricted Category, Replay Attack, Valid Order)
-  * "Execute Selected Test Case" button
-  * Assertion Result Panel (Expected vs Actual, Pass/Fail status, Remediation Tips)
-
 [VOICEOVER SCRIPT]
 "For compliance, every single action is recorded in an immutable Audit Trail."
 
-[EXACT ACTIONS / BUTTON CLICKS]
-1. Click on the "Audit Trail" tab.
 2. Click the top audit log row to expand it.
    Voiceover: "Expanding a record reveals the exact agent prompt, policy evaluation 
    verdict, and Razorpay HMAC signature validation."
+
+
+
 3. Click on the "Test Lab" tab.
 4. Select the preset test: "Exceed Single Order Limit Test".
 5. Click the button: "Execute Selected Test Case".
@@ -202,19 +118,10 @@ Audit Trail (AuditTrailView.tsx) & Test Lab (TestLabView.tsx)
 ================================================================================
 SECTION 7: TRANSACTION TRACE & SYSTEM HEALTH (4:30 - 5:00)
 ================================================================================
-[PAGE / COMPONENT]
-Transaction Trace (TransactionTraceView.tsx) & System Health (SystemHealthView.tsx)
 
-[EVERY UI DETAIL & FEATURE TO SHOW]
-- Transaction State Machine Timeline: CREATED ➔ AUTHORIZED ➔ CAPTURED
-- 6 Core Subsystem Diagnostic Cards:
-  * Fastify REST API, SQLite DB, Policy Engine, Webhooks, Quote Engine, State Machine
-- Real-time Subsystem Latencies (ms) & Operational Statuses
-- Razorpay Credentials Manager (Key ID & Webhook Secret input fields)
-- "Trigger Live Subsystem Diagnostic Check" button
 
 [VOICEOVER SCRIPT]
-"Finally, Nexus includes full state machine tracing and diagnostic health monitoring."
+"Finally, Nexus includes  diagnostic health monitoring."
 
 [EXACT ACTIONS / BUTTON CLICKS]
 1. Click on the "System Health" tab.
@@ -226,6 +133,3 @@ Transaction Trace (TransactionTraceView.tsx) & System Health (SystemHealthView.t
 Firebase Hosting and Render, Razorpay Nexus is ready to power trusted agentic commerce. 
 Thank you!"
 
-================================================================================
-END OF EXHAUSTIVE PITCH SCRIPT
-================================================================================

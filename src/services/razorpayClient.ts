@@ -1,4 +1,5 @@
 import { RazorpayOrder } from '../types';
+import { getApiUrl } from '../config/api';
 
 export interface RazorpayConfig {
   keyId: string;
@@ -56,7 +57,7 @@ class RazorpayService {
     // 1. First try backend Fastify endpoint (avoids CORS issues in browser)
     if (typeof window !== 'undefined') {
       try {
-        const res = await fetch('/api/razorpay/create-order', {
+        const res = await fetch(getApiUrl('/api/razorpay/create-order'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: amountInINR, receipt, notes })

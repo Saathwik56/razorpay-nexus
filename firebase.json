@@ -8,6 +8,10 @@
     ],
     "rewrites": [
       {
+        "source": "/api/**",
+        "destination": "https://razorpay-nexus.onrender.com/api/**"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

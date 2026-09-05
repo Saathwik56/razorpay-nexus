@@ -11,6 +11,7 @@ import {
   Lock,
   MessageSquare
 } from 'lucide-react';
+import { getApiUrl } from '../config/api';
 import { aiAgentEngine } from '../services/aiAgentEngine';
 import { PolicyEngine } from '../services/policyEngine';
 import { DEFAULT_POLICY_CONFIG } from '../data/merchantData';
@@ -76,7 +77,7 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
 
     try {
       // Try Gemini-powered NL search first
-      const res = await fetch('/api/agent-commerce/gemini-search', {
+      const res = await fetch(getApiUrl('/api/agent-commerce/gemini-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: userText })
@@ -229,12 +230,12 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
 
                         if (q?.id) {
                           try {
-                            fetch('/api/agent-commerce/approve', {
+                            fetch(getApiUrl('/api/agent-commerce/approve'), {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ quoteId: q.id, userApproved: true })
                             }).then(() => {
-                              fetch('/api/agent-commerce/order', {
+                              fetch(getApiUrl('/api/agent-commerce/order'), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ quoteId: q.id })

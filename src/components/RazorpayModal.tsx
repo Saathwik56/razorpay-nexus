@@ -8,6 +8,7 @@ import {
 import { Product } from '../types';
 import { razorpayService } from '../services/razorpayClient';
 import { auditLogger } from '../services/auditLogger';
+import { getApiUrl } from '../config/api';
 
 interface RazorpayModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export const RazorpayModal: React.FC<RazorpayModalProps> = ({
 
       // Post audit log to backend SQLite DB
       try {
-        fetch('/api/audit/log', {
+        fetch(getApiUrl('/api/audit/log'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -12,6 +12,7 @@ import {
   User
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { getApiUrl } from '../config/api';
 
 interface RevenueDashboardProps {
   onNavigateToBuyer: () => void;
@@ -54,7 +55,7 @@ export const RevenueDashboard: React.FC<RevenueDashboardProps> = ({ onNavigateTo
   useEffect(() => {
     const fetchOrderBreakdown = async () => {
       try {
-        const res = await fetch('/api/razorpay/orders');
+        const res = await fetch(getApiUrl('/api/razorpay/orders'));
         const data = await res.json();
         if (data.orders && data.orders.length > 0) {
           const agentOrders = data.orders.filter((o: any) => o.source === 'AI_BUYER' || o.source === 'REVENUE_AGENT');
@@ -77,7 +78,7 @@ export const RevenueDashboard: React.FC<RevenueDashboardProps> = ({ onNavigateTo
   const syncRazorpayOrders = async () => {
     setIsSyncingRzp(true);
     try {
-      const res = await fetch('/api/razorpay/orders');
+      const res = await fetch(getApiUrl('/api/razorpay/orders'));
       const data = await res.json();
       if (data.isLiveRazorpay) {
         setSyncToast(`Synced ${data.orders.length} live orders directly from Razorpay API!`);
