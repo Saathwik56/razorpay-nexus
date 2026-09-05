@@ -1,31 +1,28 @@
-# Production Dockerfile for Render Web Service (Free Tier Compatible)
+# Render Free Tier - Minimal, bulletproof Dockerfile
+# Strategy: NO prisma generate at build time - everything at startup
 FROM node:20-alpine
 
-# Install OpenSSL & libc for Prisma engine compatibility on Alpine
+# Required for Prisma on Alpine
 RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
-# Set DATABASE_URL at build time so prisma generate works
-ARG DATABASE_URL=file:/tmp/dev.db
-ENV DATABASE_URL=${DATABASE_URL}
-ENV NODE_ENV=production
-ENV PORT=3001
-
-# Copy package manifests & Prisma schema first (layer cache)
+# Copy and install deps
 COPY package*.json ./
+RUN npm install --include=dev
+
+# Copy prisma schema
 COPY prisma ./prisma/
 
-# Install ALL dependencies (including devDeps like prisma cli & tsx)
-RUN npm install
-
-# Generate Prisma Client
+# Generate Prisma client (DATABASE_URL is a dummy for build only - never connects)
+ENV DATABASE_URL="file:/tmp/dev.db"
 RUN npx prisma generate
 
-# Copy full application source code
+# Copy rest of source
 COPY . .
 
+# Port
 EXPOSE 3001
 
-# Launch Render startup script
+# Startup
 CMD ["node", "scripts/render-start.js"]
