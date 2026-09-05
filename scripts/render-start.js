@@ -13,21 +13,26 @@ try {
   // May already exist
 }
 
-// Run Prisma migrations and seed demo data
+// Run Prisma DB Push & Seed
 try {
   console.log('📦 Running Prisma db push...');
-  execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
-  console.log('🌱 Seeding demo merchant data...');
-  execSync('npx tsx scripts/seed.ts', { stdio: 'inherit' });
+  execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit', env: process.env });
 } catch (e) {
-  console.warn('⚠️  DB init warning (may already be seeded):', e.message);
+  console.warn('⚠️  Prisma DB push notice:', e.message);
+}
+
+try {
+  console.log('🌱 Seeding demo merchant data...');
+  execSync('npx tsx scripts/seed.ts', { stdio: 'inherit', env: process.env });
+} catch (e) {
+  console.warn('⚠️  DB seed notice:', e.message);
 }
 
 // Start Fastify API on port 3001
 console.log('✅ Launching Fastify API on 0.0.0.0:3001...');
 const server = spawn('npx', ['tsx', 'src/server.ts'], {
   stdio: 'inherit',
-  env: { ...process.env }
+  env: process.env
 });
 
 server.on('exit', (code) => {
