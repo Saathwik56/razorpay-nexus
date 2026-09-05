@@ -5,6 +5,16 @@
 
 Razorpay Nexus is a merchant-side control plane for agentic commerce built on top of **Razorpay Test Mode APIs**. It makes merchants AI-discoverable and AI-transactable while giving them deterministic controls over what an AI agent is allowed to do with money.
 
+## 🚀 Live Demo
+
+| | URL |
+|---|---|
+| **Frontend (Firebase)** | https://razorpay-nexus.web.app |
+| **Backend API (Render)** | https://razorpay-nexus.onrender.com |
+| **Health Check** | https://razorpay-nexus.onrender.com/api/health |
+| **AI Catalog Endpoint** | https://razorpay-nexus.onrender.com/api/agent-commerce/catalog |
+| **GitHub Repo** | https://github.com/Saathwik56/razorpay-nexus |
+
 ---
 
 ## 🛠️ Technology Stack
