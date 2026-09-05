@@ -2,6 +2,10 @@ import { execSync, spawn } from 'child_process';
 
 console.log('🚀 Starting Razorpay Nexus on Render...');
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db';
+}
+
 // Ensure /data directory exists for persistent SQLite
 try {
   execSync('mkdir -p /data', { stdio: 'inherit' });

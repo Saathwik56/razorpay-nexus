@@ -10,6 +10,9 @@ import { agentCommerceService } from './services/agentCommerceService';
 import { aiAgentEngine } from './services/aiAgentEngine';
 import { DEFAULT_POLICY_CONFIG } from './data/merchantData';
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db';
+}
 const prisma = new PrismaClient();
 const server: FastifyInstance = Fastify({ logger: true });
 
