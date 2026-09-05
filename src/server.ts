@@ -42,6 +42,18 @@ server.get('/', async (req: FastifyRequest, reply: FastifyReply) => {
   });
 });
 
+const healthHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+  return reply.status(200).send({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    service: 'razorpay-nexus-api'
+  });
+};
+
+server.get('/health', healthHandler);
+server.get('/api/health', healthHandler);
+
 
 // Response Helpers
 const sendSuccess = (reply: FastifyReply, data: any, statusCode: number = 200) => {
