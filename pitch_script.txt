@@ -1,0 +1,146 @@
+================================================================================
+RAZORPAY NEXUS — 5-MINUTE PITCH VIDEO SCRIPT & BUTTON NAVIGATION GUIDE
+================================================================================
+Live Demo Frontend : https://razorpay-nexus.web.app
+Live Demo Backend  : https://razorpay-nexus.onrender.com
+Repository         : https://github.com/Saathwik56/razorpay-nexus
+
+================================================================================
+SECTION 1: OVERVIEW PAGE & INTRO (0:00 - 0:40)
+================================================================================
+[SCREEN / UI NAVIGATION]
+1. Open browser to: https://razorpay-nexus.web.app
+2. Stay on the home / Overview tab.
+
+[VOICEOVER SCRIPT]
+"Hi everyone! As AI agents evolve from simple chat assistants into autonomous 
+buyers making real transactions on behalf of users, a major problem arises: 
+How do merchants govern, bound, and trust AI transactions at scale? Without 
+guardrails, AI agents can bypass business rules, exceed spending limits, or 
+cause fraud.
+
+Welcome to Razorpay Nexus — an Agentic Commerce Control Plane designed to 
+make merchants AI-discoverable while ensuring every single AI transaction is 
+explainable, bounded, policy-gated, and verified."
+
+[BUTTON CLICK ACTION]
+- Click the blue button: "Launch AI Buyer Demo" on the hero banner.
+
+
+================================================================================
+SECTION 2: POLICY ENGINE & BUSINESS RULES (0:40 - 1:30)
+================================================================================
+[SCREEN / UI NAVIGATION]
+App automatically navigates to the "Policy Engine" tab.
+
+[VOICEOVER SCRIPT]
+"Here in the Policy Engine, merchants configure strict financial and catalog 
+guardrails for incoming autonomous agents."
+
+[BUTTON CLICK ACTIONS & STEPS]
+Step 1: Click inside the "Max Single Order Limit" input box.
+        Type/Change value from 50000 to 30000.
+        
+Step 2: Find the "Alcohol" category toggle switch.
+        Click it to turn it OFF (Disabled).
+
+Step 3: Click the button: "Save Policy Rules"
+        Voiceover: "The policy rules update instantly in our database."
+
+Step 4: Click the button: "Simulate Policy Check"
+        Voiceover: "The engine evaluates all rules in under 2 milliseconds, 
+        returning a clear ALLOW or DENY verdict."
+
+
+================================================================================
+SECTION 3: GEMINI AI BUYER SIMULATOR (1:30 - 2:30)
+================================================================================
+[SCREEN / UI NAVIGATION]
+Click on the "AI Buyer Simulator" tab in top navigation bar.
+
+[VOICEOVER SCRIPT]
+"Now let's see an autonomous AI buyer in action."
+
+[BUTTON CLICK ACTIONS & STEPS]
+Step 1: Click the preset chip: "Post-workout recovery products under ₹3000"
+        (Or type it directly into the prompt box).
+
+Step 2: Click the button: "Run AI Buyer Query"
+        Voiceover: "Razorpay Nexus calls Gemini 1.5 Flash to extract structured 
+        intent — parsing target keywords, category, and budget bounds in real time."
+
+Step 3: Click the button: "Generate Bounded Quote & Place Order"
+        Voiceover: "Nexus issues a 10-minute cryptographically signed quote, 
+        verifies it against policy rules, and executes the order through Razorpay 
+        Sandbox — generating an official Razorpay Order ID."
+
+Step 4: Click the button: "Reset Agent Chat" to clear the query screen.
+
+
+================================================================================
+SECTION 4: MERCHANT REVENUE DASHBOARD (2:30 - 3:30)
+================================================================================
+[SCREEN / UI NAVIGATION]
+Click on the "Revenue Dashboard" tab in top navigation bar.
+
+[VOICEOVER SCRIPT]
+"The Merchant Revenue Dashboard gives real-time visibility into agentic 
+commerce performance."
+
+[BUTTON CLICK ACTIONS & STEPS]
+Step 1: Click the time filter pill: "30 Days"
+        Voiceover: "The revenue charts update dynamically."
+
+Step 2: Hover your mouse cursor over the blue "Agentic Orders" segment on the 
+        Agentic vs. Human Revenue Pie Chart.
+        Voiceover: "Here we track what percentage of total revenue and order 
+        volume is driven by AI agents versus direct human checkouts."
+
+Step 3: Click the button: "Refresh Dashboard Data".
+
+
+================================================================================
+SECTION 5: AUDIT TRAIL & INTERACTIVE TEST LAB (3:30 - 4:30)
+================================================================================
+[SCREEN / UI NAVIGATION]
+Click on the "Audit Trail / Test Lab" tab in top navigation bar.
+
+[VOICEOVER SCRIPT]
+"For compliance and auditing, every AI action is logged in an immutable 
+cryptographic Audit Trail."
+
+[BUTTON CLICK ACTIONS & STEPS]
+Step 1: Click on the top log entry row to expand it.
+        Voiceover: "Expanding any record reveals the full prompt, Gemini intent 
+        JSON, policy verdict, and HMAC signature status."
+
+Step 2: Scroll to the Test Lab section below.
+        Click the test dropdown and select: "Exceed Single Order Limit Test".
+
+Step 3: Click the button: "Execute Selected Test Case"
+        Voiceover: "Our test lab executes live policy assertions to prove the 
+        system blocks invalid orders."
+
+
+================================================================================
+SECTION 6: SYSTEM HEALTH & CONCLUSION (4:30 - 5:00)
+================================================================================
+[SCREEN / UI NAVIGATION]
+Click on the "System Health / Config" tab in top navigation bar.
+
+[VOICEOVER SCRIPT]
+"Finally, Nexus includes full diagnostic monitoring."
+
+[BUTTON CLICK ACTIONS & STEPS]
+Step 1: Click the button: "Trigger Live Subsystem Diagnostic Check"
+        Voiceover: "All 6 core subsystems — API, Database, Policy Engine, 
+        Webhooks, Quote Engine, and State Machine — are verified live."
+
+[CONCLUDING VOICEOVER]
+"With 51 passing automated tests, Docker support, and full cloud deployment on 
+Firebase and Render, Razorpay Nexus is ready for enterprise agentic commerce. 
+Thank you!"
+
+================================================================================
+END OF SCRIPT
+================================================================================
