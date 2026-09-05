@@ -42,17 +42,6 @@ server.get('/', async (req: FastifyRequest, reply: FastifyReply) => {
   });
 });
 
-const healthHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-  return reply.status(200).send({
-    status: 'healthy',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    service: 'razorpay-nexus-api'
-  });
-};
-
-server.get('/health', healthHandler);
-server.get('/api/health', healthHandler);
 
 
 // Response Helpers
@@ -868,8 +857,8 @@ server.get('/api/agent-commerce/order/:id', async (req: FastifyRequest, reply: F
   });
 });
 
-// GET /api/health - Dynamic live backend health & subsystem verification
-server.get('/api/health', async (req: FastifyRequest, reply: FastifyReply) => {
+// GET /api/health & GET /health - Dynamic live backend health & subsystem verification
+const getHealthStatus = async (req: FastifyRequest, reply: FastifyReply) => {
   const startTime = Date.now();
   const subsystems: Array<{
     name: string;
@@ -977,7 +966,11 @@ server.get('/api/health', async (req: FastifyRequest, reply: FastifyReply) => {
       secretsExposedCount: 0
     }
   });
-});
+};
+
+server.get('/health', getHealthStatus);
+server.get('/api/health', getHealthStatus);
+
 
 // ---------------------------------------------------------------------------
 // INTERACTIVE TEST LAB API ENDPOINTS (/api/test-lab/*)
