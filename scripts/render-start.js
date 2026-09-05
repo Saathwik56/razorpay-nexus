@@ -2,41 +2,48 @@ import { execSync, spawn } from 'child_process';
 
 console.log('🚀 Starting Razorpay Nexus on Render...');
 
+// Ensure DATABASE_URL is set - use /tmp for free tier (no persistent disk)
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'file:./dev.db';
+  process.env.DATABASE_URL = 'file:/tmp/dev.db';
+  console.log('ℹ️  DATABASE_URL not set, defaulting to file:/tmp/dev.db');
 }
+console.log('📁 DATABASE_URL:', process.env.DATABASE_URL);
 
-// Ensure /data directory exists for persistent SQLite
+// Run Prisma DB Push (creates/migrates the SQLite DB)
 try {
-  execSync('mkdir -p /data', { stdio: 'inherit' });
+  console.log('📦 Running prisma db push...');
+  execSync('npx prisma db push --accept-data-loss', {
+    stdio: 'inherit',
+    env: process.env
+  });
+  console.log('✅ Prisma DB push done');
 } catch (e) {
-  // May already exist
+  console.warn('⚠️  Prisma db push warning (non-fatal):', e.message);
 }
 
-// Run Prisma DB Push & Seed
-try {
-  console.log('📦 Running Prisma db push...');
-  execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit', env: process.env });
-} catch (e) {
-  console.warn('⚠️  Prisma DB push notice:', e.message);
-}
-
+// Seed demo data
 try {
   console.log('🌱 Seeding demo merchant data...');
-  execSync('npx tsx scripts/seed.ts', { stdio: 'inherit', env: process.env });
+  execSync('npx tsx scripts/seed.ts', {
+    stdio: 'inherit',
+    env: process.env
+  });
+  console.log('✅ Seed complete');
 } catch (e) {
-  console.warn('⚠️  DB seed notice:', e.message);
+  console.warn('⚠️  Seed warning (non-fatal):', e.message);
 }
 
-// Start Fastify API on port 3001
-console.log('✅ Launching Fastify API on 0.0.0.0:3001...');
+// Start Fastify server
+const port = process.env.PORT || '3001';
+console.log(`✅ Launching Fastify API on 0.0.0.0:${port}...`);
+
 const server = spawn('npx', ['tsx', 'src/server.ts'], {
   stdio: 'inherit',
   env: process.env
 });
 
 server.on('exit', (code) => {
-  console.error(`Fastify process exited with code ${code}`);
+  console.error(`❌ Fastify process exited with code ${code}`);
   process.exit(code ?? 1);
 });
 

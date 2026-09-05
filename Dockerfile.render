@@ -1,4 +1,4 @@
-# Production Dockerfile for Render Web Service
+# Production Dockerfile for Render Web Service (Free Tier Compatible)
 FROM node:20-alpine
 
 # Install OpenSSL & libc for Prisma engine compatibility on Alpine
@@ -6,25 +6,26 @@ RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
-# Set default production environment variables
+# Set DATABASE_URL at build time so prisma generate works
+ARG DATABASE_URL=file:/tmp/dev.db
+ENV DATABASE_URL=${DATABASE_URL}
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV DATABASE_URL="file:./dev.db"
 
-# Copy package manifests & Prisma schema
+# Copy package manifests & Prisma schema first (layer cache)
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN npm ci
+# Install ALL dependencies (including devDeps like prisma cli & tsx)
+RUN npm install
 
-# Copy full application source code (including scripts, tsconfig.json, src)
-COPY . .
-
-# Generate Prisma Client for Alpine runtime
+# Generate Prisma Client
 RUN npx prisma generate
+
+# Copy full application source code
+COPY . .
 
 EXPOSE 3001
 
-# Launch Render startup script (runs DB push, seed, and starts Fastify server)
+# Launch Render startup script
 CMD ["node", "scripts/render-start.js"]
