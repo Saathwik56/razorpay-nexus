@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -7,9 +7,11 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Zap, 
-  BarChart3 
+  BarChart3,
+  Bot,
+  User
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 interface RevenueDashboardProps {
   onNavigateToBuyer: () => void;
@@ -25,9 +27,52 @@ const chartData = [
   { day: 'Sun', revenue: 72000, agentic: 26800 },
 ];
 
+const PIE_COLORS = ['#0f63ed', '#10b981'];
+
+const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return percent > 0.08 ? (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={700}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  ) : null;
+};
+
 export const RevenueDashboard: React.FC<RevenueDashboardProps> = ({ onNavigateToBuyer }) => {
   const [isSyncingRzp, setIsSyncingRzp] = useState(false);
   const [syncToast, setSyncToast] = useState<string | null>(null);
+  const [pieData, setPieData] = useState([
+    { name: 'AI Agent Orders', value: 112800 },
+    { name: 'Human / Direct', value: 230000 },
+  ]);
+  const [pieLoading, setPieLoading] = useState(true);
+
+  // Fetch real order breakdown from backend
+  useEffect(() => {
+    const fetchOrderBreakdown = async () => {
+      try {
+        const res = await fetch('/api/razorpay/orders');
+        const data = await res.json();
+        if (data.orders && data.orders.length > 0) {
+          const agentOrders = data.orders.filter((o: any) => o.source === 'AI_BUYER' || o.source === 'REVENUE_AGENT');
+          const humanOrders = data.orders.filter((o: any) => o.source === 'DIRECT' || !o.source);
+          const agentRevenue = agentOrders.reduce((s: number, o: any) => s + (o.amount || 0), 0);
+          const humanRevenue = humanOrders.reduce((s: number, o: any) => s + (o.amount || 0), 0);
+          if (agentRevenue + humanRevenue > 0) {
+            setPieData([
+              { name: 'AI Agent Orders', value: Math.round(agentRevenue) },
+              { name: 'Human / Direct', value: Math.round(humanRevenue) },
+            ]);
+          }
+        }
+      } catch (_) {}
+      finally { setPieLoading(false); }
+    };
+    fetchOrderBreakdown();
+  }, []);
 
   const syncRazorpayOrders = async () => {
     setIsSyncingRzp(true);
@@ -193,6 +238,81 @@ export const RevenueDashboard: React.FC<RevenueDashboardProps> = ({ onNavigateTo
               <Area type="monotone" dataKey="agentic" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorAgent)" />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Agentic vs Human Revenue Pie Chart */}
+      <div className="saas-card p-6 space-y-5">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+          <div>
+            <h2 className="font-bold text-slate-900 text-sm font-['Plus_Jakarta_Sans']">Agentic vs Human Revenue Split</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Real-time breakdown of AI Agent orders vs direct human checkout</p>
+          </div>
+          {pieLoading && <span className="text-xs text-slate-400 font-mono animate-pulse">Loading live data...</span>}
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          {/* Pie Chart */}
+          <div className="h-56 w-full md:w-64 flex-shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%" cy="50%"
+                  innerRadius={55} outerRadius={90}
+                  paddingAngle={3}
+                  dataKey="value"
+                  labelLine={false}
+                  label={CustomPieLabel}
+                  animationBegin={0}
+                  animationDuration={800}
+                >
+                  {pieData.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(v: number) => [`₹${v.toLocaleString('en-IN')}`, '']}
+                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', border: 'none', color: '#fff', fontSize: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* KPI Callouts */}
+          <div className="flex flex-col gap-4 flex-1 w-full">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+              <div className="p-2 bg-[#0f63ed] rounded-lg"><Bot className="w-4 h-4 text-white" /></div>
+              <div>
+                <div className="text-xs text-slate-500 font-medium">AI Agent Revenue</div>
+                <div className="text-xl font-extrabold text-slate-900 font-['Plus_Jakarta_Sans']">
+                  ₹{pieData[0].value.toLocaleString('en-IN')}
+                </div>
+                <div className="text-xs text-[#0f63ed] font-semibold font-mono mt-0.5">
+                  {((pieData[0].value / (pieData[0].value + pieData[1].value)) * 100).toFixed(1)}% of total • AI Buyer + Revenue Agent
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+              <div className="p-2 bg-emerald-500 rounded-lg"><User className="w-4 h-4 text-white" /></div>
+              <div>
+                <div className="text-xs text-slate-500 font-medium">Human / Direct Revenue</div>
+                <div className="text-xl font-extrabold text-slate-900 font-['Plus_Jakarta_Sans']">
+                  ₹{pieData[1].value.toLocaleString('en-IN')}
+                </div>
+                <div className="text-xs text-emerald-600 font-semibold font-mono mt-0.5">
+                  {((pieData[1].value / (pieData[0].value + pieData[1].value)) * 100).toFixed(1)}% of total • Standard checkout
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="text-xs font-mono text-slate-500">
+                📈 AI Agent share growing <span className="text-emerald-600 font-bold">+42% MoM</span> — agentic commerce is now the fastest growing revenue channel.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -566,6 +566,94 @@ server.post('/api/agent-commerce/search', async (req: FastifyRequest, reply: Fas
   return sendSuccess(reply, searchResult);
 });
 
+// POST /api/agent-commerce/gemini-search — Gemini-powered natural language intent extraction
+server.post('/api/agent-commerce/gemini-search', async (req: FastifyRequest, reply: FastifyReply) => {
+  const { query, merchantId } = req.body as { query: string; merchantId?: string };
+  const mId = merchantId || 'merchant_urbanfit_1';
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  let geminiIntent: { keywords: string[]; maxPrice?: number; category?: string; intent: string } | null = null;
+  let usedGemini = false;
+
+  // Call Gemini API if key is configured
+  if (geminiKey && query) {
+    try {
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are a shopping intent parser for a fitness/sports merchant. Extract structured intent from the buyer's query.
+Return ONLY valid JSON with this exact schema:
+{
+  "keywords": ["array", "of", "search", "terms"],
+  "maxPrice": null or number in INR,
+  "category": null or one of ["supplements", "gear", "nutrition", "equipment", "apparel"],
+  "intent": "brief human-readable description of what user wants"
+}
+
+Buyer query: "${query}"
+
+JSON response:`
+              }]
+            }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 256 }
+          })
+        }
+      );
+
+      if (geminiRes.ok) {
+        const geminiData = await geminiRes.json();
+        const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          geminiIntent = JSON.parse(jsonMatch[0]);
+          usedGemini = true;
+        }
+      }
+    } catch (e: any) {
+      server.log.warn('Gemini API call failed, falling back to keyword search: ' + e.message);
+    }
+  }
+
+  // Build enriched query from Gemini intent (or fall back to raw query)
+  const enrichedQuery = geminiIntent
+    ? geminiIntent.keywords.join(' ')
+    : query;
+
+  const policy = await prisma.policy.findFirst({ where: { merchantId: mId } }) || {};
+  const policyEngine = new PolicyEngine(policy as any);
+  const searchResult = aiAgentEngine.processBuyerQuery(enrichedQuery, policyEngine);
+
+  // Filter by maxPrice if Gemini extracted one
+  let filteredProducts = searchResult.matchedProducts;
+  if (geminiIntent?.maxPrice) {
+    filteredProducts = filteredProducts.filter((p: any) => p.price <= geminiIntent!.maxPrice!);
+  }
+
+  await createAuditLog({
+    merchantId: mId,
+    actor: 'AI_BUYER',
+    eventType: 'GEMINI_NL_SEARCH',
+    actionName: 'GEMINI_CATALOG_SEARCH',
+    description: `Gemini NL Search: "${query}" → Intent: "${geminiIntent?.intent || query}" (${filteredProducts.length} matches)`,
+    inputSnapshot: { query, geminiIntent, usedGemini, matchedCount: filteredProducts.length },
+    decision: 'ALLOW',
+    reason: usedGemini ? 'Query parsed by Gemini 1.5 Flash and matched against AI Passport.' : 'Fallback keyword search (Gemini key not configured).'
+  });
+
+  return sendSuccess(reply, {
+    ...searchResult,
+    matchedProducts: filteredProducts,
+    geminiIntent,
+    usedGemini,
+    enrichedQuery
+  });
+});
+
 // POST /api/agent-commerce/quote
 server.post('/api/agent-commerce/quote', async (req: FastifyRequest, reply: FastifyReply) => {
   const body = req.body as { merchantId?: string; products: { productId: string; quantity: number; discount?: number }[] };

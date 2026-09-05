@@ -31,6 +31,8 @@ interface AIBuyerSimulatorProps {
 
 export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCheckout }) => {
   const [inputQuery, setInputQuery] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
+  const [lastGeminiIntent, setLastGeminiIntent] = useState<{ intent: string; keywords: string[]; maxPrice?: number; usedGemini: boolean } | null>(null);
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'agent'; text: string; quote?: Quote; items?: Product[] }>>([
     { sender: 'agent', text: 'Hello! I am your AI Buyer Agent. Ask me to search products, recommend items, or negotiate a policy-verified bounded quote for any product in the catalog.' }
   ]);
@@ -63,39 +65,72 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
       ).slice(0, 4)
     : [];
 
-  const handleSendQuery = (queryText: string) => {
+  const handleSendQuery = async (queryText: string) => {
     const userText = queryText || inputQuery;
     if (!userText.trim()) return;
 
     setMessages(prev => [...prev, { sender: 'user', text: userText }]);
     setInputQuery('');
+    setIsThinking(true);
+    setLastGeminiIntent(null);
 
+    try {
+      // Try Gemini-powered NL search first
+      const res = await fetch('/api/agent-commerce/gemini-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: userText })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const searchResult = data;
+        setMatchedProducts(searchResult.matchedProducts || []);
+
+        if (data.geminiIntent) {
+          setLastGeminiIntent({ ...data.geminiIntent, usedGemini: data.usedGemini });
+        }
+
+        if (searchResult.quote) {
+          setActiveQuote(searchResult.quote);
+          setMessages(prev => [
+            ...prev,
+            {
+              sender: 'agent',
+              text: `🎯 Best Recommendation: ${searchResult.matchedProducts[0]?.name} (₹${searchResult.matchedProducts[0]?.price.toLocaleString()}) — Selected as optimal fit from merchant catalog. Generated Policy-Verified Bounded Quote #${searchResult.quote?.quoteNumber}. Total: ₹${searchResult.quote?.total.toLocaleString()}. Expires in 10 mins.`,
+              quote: searchResult.quote,
+              items: searchResult.matchedProducts
+            }
+          ]);
+        } else {
+          setMessages(prev => [
+            ...prev,
+            {
+              sender: 'agent',
+              text: searchResult.matchedProducts?.length
+                ? `Matched ${searchResult.matchedProducts.length} item${searchResult.matchedProducts.length > 1 ? 's' : ''}: ${searchResult.matchedProducts.map((p: any) => p.name).join(', ')}.`
+                : `No exact matches found for "${userText}". Try: protein, whey, creatine, gym bag, shoes.`
+            }
+          ]);
+        }
+        return;
+      }
+    } catch (_) {
+      // API unreachable – fall back to local processing
+    } finally {
+      setIsThinking(false);
+    }
+
+    // Local fallback
     const activePolicyEngine = new PolicyEngine(getSavedPolicyConfig());
     const searchResult = aiAgentEngine.processBuyerQuery(userText, activePolicyEngine);
-
-    setTimeout(() => {
-      setMatchedProducts(searchResult.matchedProducts);
-      if (searchResult.quote) {
-        setActiveQuote(searchResult.quote);
-        setMessages(prev => [
-          ...prev,
-          {
-            sender: 'agent',
-            text: `🎯 Best Recommendation: ${searchResult.matchedProducts[0]?.name} (₹${searchResult.matchedProducts[0]?.price.toLocaleString()}) — Selected as optimal fit from merchant catalog. Generated Policy-Verified Bounded Quote #${searchResult.quote?.quoteNumber}. Subtotal: ₹${searchResult.quote?.subtotal.toLocaleString()}, Total: ₹${searchResult.quote?.total.toLocaleString()}. Expires in 10 mins.`,
-            quote: searchResult.quote,
-            items: searchResult.matchedProducts
-          }
-        ]);
-      } else {
-        setMessages(prev => [
-          ...prev,
-          {
-            sender: 'agent',
-            text: `Matched ${searchResult.matchedProducts.length} items from the merchant catalog. ${searchResult.matchedProducts.map(p => p.name).join(', ')}.`
-          }
-        ]);
-      }
-    }, 250);
+    setMatchedProducts(searchResult.matchedProducts);
+    if (searchResult.quote) {
+      setActiveQuote(searchResult.quote);
+      setMessages(prev => [...prev, { sender: 'agent', text: `🎯 ${searchResult.matchedProducts[0]?.name} — Quote #${searchResult.quote?.quoteNumber} for ₹${searchResult.quote?.total.toLocaleString()}`, quote: searchResult.quote, items: searchResult.matchedProducts }]);
+    } else {
+      setMessages(prev => [...prev, { sender: 'agent', text: `Found ${searchResult.matchedProducts.length} items: ${searchResult.matchedProducts.map(p => p.name).join(', ')}` }]);
+    }
   };
 
   return (
@@ -109,11 +144,44 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
           </h1>
         </div>
 
-        <div className="flex items-center space-x-2 bg-blue-50 text-[#0f63ed] border border-blue-200/80 px-3 py-1.5 rounded-xl text-xs font-mono font-bold">
-          <ShieldCheck className="w-4 h-4 text-[#0f63ed]" />
-          <span>Bounded Quote Engine Active</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-[#0f63ed] border border-blue-200/80 px-3 py-1.5 rounded-xl text-xs font-mono font-bold">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Gemini 1.5 Flash</span>
+          </div>
+          <div className="flex items-center space-x-2 bg-blue-50 text-[#0f63ed] border border-blue-200/80 px-3 py-1.5 rounded-xl text-xs font-mono font-bold">
+            <ShieldCheck className="w-4 h-4 text-[#0f63ed]" />
+            <span>Policy Engine Active</span>
+          </div>
         </div>
       </div>
+
+      {/* Gemini Intent Display */}
+      {lastGeminiIntent && (
+        <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl animate-fadeIn">
+          <Sparkles className="w-4 h-4 text-[#0f63ed] flex-shrink-0 mt-0.5" />
+          <div className="text-xs space-y-0.5">
+            <div className="font-bold text-[#0f63ed]">{lastGeminiIntent.usedGemini ? '✨ Gemini AI parsed your intent:' : '🔍 Keyword search:'}</div>
+            <div className="text-slate-700 font-medium">"{lastGeminiIntent.intent}"</div>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {lastGeminiIntent.keywords.map(k => (
+                <span key={k} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold">{k}</span>
+              ))}
+              {lastGeminiIntent.maxPrice && (
+                <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold">max ₹{lastGeminiIntent.maxPrice.toLocaleString()}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Thinking indicator */}
+      {isThinking && (
+        <div className="flex items-center gap-2 text-xs text-slate-500 font-mono animate-pulse">
+          <Sparkles className="w-3.5 h-3.5 text-[#0f63ed]" />
+          <span>Gemini is parsing your intent...</span>
+        </div>
+      )}
 
       {/* Main Chat & Quote Interface */}
       <div className="saas-card p-6 space-y-6">
