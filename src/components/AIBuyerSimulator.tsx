@@ -226,6 +226,23 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
                         e.stopPropagation();
                         const q = msg.quote || activeQuote;
                         const items = msg.items || matchedProducts;
+
+                        if (q?.id) {
+                          try {
+                            fetch('/api/agent-commerce/approve', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ quoteId: q.id, userApproved: true })
+                            }).then(() => {
+                              fetch('/api/agent-commerce/order', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ quoteId: q.id })
+                              });
+                            }).catch(() => {});
+                          } catch (_) {}
+                        }
+
                         onInitiateCheckout({
                           bundleTitle: `Quote #${q?.quoteNumber || 'QT-1001'}`,
                           items: items && items.length > 0 ? items : [aiAgentEngine.getProducts()[0]],

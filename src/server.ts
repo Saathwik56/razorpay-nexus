@@ -396,21 +396,53 @@ server.post('/api/razorpay/create-order', async (req: FastifyRequest, reply: Fas
     server.log.error('Razorpay order API network error: ' + e.message);
   }
 
-  // Fallback mock order if API key is invalid or offline
-  const fallbackOrder = {
-    id: `order_${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
-    entity: 'order',
-    amount: amountInPaisa,
-    amount_paid: 0,
-    amount_due: amountInPaisa,
-    currency: 'INR',
-    receipt: rcpt,
-    status: 'created',
-    attempts: 0,
-    created_at: Math.floor(Date.now() / 1000)
-  };
+  if (!createdOrder) {
+    createdOrder = {
+      id: `order_${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
+      entity: 'order',
+      amount: amountInPaisa,
+      amount_paid: 0,
+      amount_due: amountInPaisa,
+      currency: 'INR',
+      receipt: rcpt,
+      status: 'created',
+      attempts: 0,
+      created_at: Math.floor(Date.now() / 1000)
+    };
+  }
 
-  return sendSuccess(reply, { order: fallbackOrder });
+  // Also persist in SQLite DB so order is saved in local database
+  try {
+    await prisma.order.upsert({
+      where: { razorpayOrderId: createdOrder.id },
+      update: { amount: amount || createdOrder.amount / 100, status: 'CREATED' },
+      create: {
+        merchantId: 'merchant_urbanfit_1',
+        razorpayOrderId: createdOrder.id,
+        amount: amount || createdOrder.amount / 100,
+        currency: 'INR',
+        status: 'CREATED',
+        source: 'AI_BUYER'
+      }
+    });
+
+    await createAuditLog({
+      merchantId: 'merchant_urbanfit_1',
+      razorpayOrderId: createdOrder.id,
+      actor: 'RAZORPAY',
+      eventType: 'RAZORPAY_ORDER_CREATED',
+      actionName: 'CREATE_RAZORPAY_ORDER',
+      description: `Razorpay order ${createdOrder.id} created for ₹${amount || createdOrder.amount / 100}`,
+      inputSnapshot: createdOrder,
+      decision: 'ALLOW',
+      reason: 'Order created and persisted.',
+      status: 'SUCCESS'
+    });
+  } catch (dbErr) {
+    server.log.warn('Order DB insert notice: ' + (dbErr as any)?.message);
+  }
+
+  return sendSuccess(reply, { order: createdOrder });
 });
 
 
@@ -499,8 +531,20 @@ server.post('/api/audit/log', async (req: FastifyRequest, reply: FastifyReply) =
     inputSnapshot: body.inputSnapshot || { testManual: true },
     decision: body.decision || 'ALLOW',
     reason: body.reason || 'Manually triggered by merchant tester.',
-    status: body.status || 'SUCCESS'
+    status: body.status || 'SUCCESS',
+    razorpayOrderId: body.razorpayOrderId,
+    paymentId: body.paymentId
   });
+
+  if (body.razorpayOrderId) {
+    try {
+      await prisma.order.updateMany({
+        where: { razorpayOrderId: body.razorpayOrderId },
+        data: { status: 'CAPTURED' }
+      });
+    } catch (_) {}
+  }
+
   return sendSuccess(reply, { log });
 });
 
