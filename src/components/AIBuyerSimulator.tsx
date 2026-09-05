@@ -66,73 +66,96 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
       ).slice(0, 4)
     : [];
 
-  const handleSendQuery = async (queryText: string) => {
-    const userText = queryText || inputQuery;
-    if (!userText.trim()) return;
+  const handleSendQuery = async (queryText?: string) => {
+    const userText = (queryText !== undefined && queryText !== null) ? queryText : inputQuery;
+    if (!userText || !userText.trim()) return;
 
-    setMessages(prev => [...prev, { sender: 'user', text: userText }]);
+    const queryToExecute = userText.trim();
     setInputQuery('');
     setIsThinking(true);
     setLastGeminiIntent(null);
+
+    setMessages(prev => [...prev, { sender: 'user', text: queryToExecute }]);
+
+    let gotBackendResult = false;
 
     try {
       // Try Gemini-powered NL search first
       const res = await fetch(getApiUrl('/api/agent-commerce/gemini-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: userText })
+        body: JSON.stringify({ query: queryToExecute })
       });
 
       if (res.ok) {
         const data = await res.json();
-        const searchResult = data;
-        setMatchedProducts(searchResult.matchedProducts || []);
+        if (data.matchedProducts) {
+          gotBackendResult = true;
+          setMatchedProducts(data.matchedProducts || []);
 
-        if (data.geminiIntent) {
-          setLastGeminiIntent({ ...data.geminiIntent, usedGemini: data.usedGemini });
-        }
+          if (data.geminiIntent) {
+            setLastGeminiIntent({ ...data.geminiIntent, usedGemini: data.usedGemini });
+          }
 
-        if (searchResult.quote) {
-          setActiveQuote(searchResult.quote);
-          setMessages(prev => [
-            ...prev,
-            {
-              sender: 'agent',
-              text: `🎯 Best Recommendation: ${searchResult.matchedProducts[0]?.name} (₹${searchResult.matchedProducts[0]?.price.toLocaleString()}) — Selected as optimal fit from merchant catalog. Generated Policy-Verified Bounded Quote #${searchResult.quote?.quoteNumber}. Total: ₹${searchResult.quote?.total.toLocaleString()}. Expires in 10 mins.`,
-              quote: searchResult.quote,
-              items: searchResult.matchedProducts
-            }
-          ]);
-        } else {
-          setMessages(prev => [
-            ...prev,
-            {
-              sender: 'agent',
-              text: searchResult.matchedProducts?.length
-                ? `Matched ${searchResult.matchedProducts.length} item${searchResult.matchedProducts.length > 1 ? 's' : ''}: ${searchResult.matchedProducts.map((p: any) => p.name).join(', ')}.`
-                : `No exact matches found for "${userText}". Try: protein, whey, creatine, gym bag, shoes.`
-            }
-          ]);
+          if (data.quote) {
+            setActiveQuote(data.quote);
+            setMessages(prev => [
+              ...prev,
+              {
+                sender: 'agent',
+                text: `🎯 Best Recommendation: ${data.matchedProducts[0]?.name || 'Item'} (₹${(data.matchedProducts[0]?.price || 0).toLocaleString()}) — Policy-Verified Bounded Quote #${data.quote?.quoteNumber}. Total: ₹${(data.quote?.total || 0).toLocaleString()}. Expires in 10 mins.`,
+                quote: data.quote,
+                items: data.matchedProducts
+              }
+            ]);
+          } else {
+            setMessages(prev => [
+              ...prev,
+              {
+                sender: 'agent',
+                text: data.matchedProducts?.length
+                  ? `Matched ${data.matchedProducts.length} item(s): ${data.matchedProducts.map((p: any) => p.name).join(', ')}.`
+                  : `No exact matches found for "${queryToExecute}". Try: protein, whey, earbuds, watch, shoes.`
+              }
+            ]);
+          }
         }
-        return;
       }
-    } catch (_) {
-      // API unreachable – fall back to local processing
+    } catch (err) {
+      console.warn('Backend query notice:', err);
     } finally {
       setIsThinking(false);
     }
 
-    // Local fallback
-    const activePolicyEngine = new PolicyEngine(getSavedPolicyConfig());
-    const searchResult = aiAgentEngine.processBuyerQuery(userText, activePolicyEngine);
-    setMatchedProducts(searchResult.matchedProducts);
-    if (searchResult.quote) {
-      setActiveQuote(searchResult.quote);
-      setMessages(prev => [...prev, { sender: 'agent', text: `🎯 ${searchResult.matchedProducts[0]?.name} — Quote #${searchResult.quote?.quoteNumber} for ₹${searchResult.quote?.total.toLocaleString()}`, quote: searchResult.quote, items: searchResult.matchedProducts }]);
-    } else {
-      setMessages(prev => [...prev, { sender: 'agent', text: `Found ${searchResult.matchedProducts.length} items: ${searchResult.matchedProducts.map(p => p.name).join(', ')}` }]);
+    // Local fallback if backend result wasn't retrieved
+    if (!gotBackendResult) {
+      const activePolicyEngine = new PolicyEngine(getSavedPolicyConfig());
+      const searchResult = aiAgentEngine.processBuyerQuery(queryToExecute, activePolicyEngine);
+      setMatchedProducts(searchResult.matchedProducts);
+      if (searchResult.quote) {
+        setActiveQuote(searchResult.quote);
+        setMessages(prev => [
+          ...prev,
+          {
+            sender: 'agent',
+            text: `🎯 ${searchResult.matchedProducts[0]?.name} — Policy-Verified Bounded Quote #${searchResult.quote?.quoteNumber} for ₹${searchResult.quote?.total?.toLocaleString()}`,
+            quote: searchResult.quote,
+            items: searchResult.matchedProducts
+          }
+        ]);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            sender: 'agent',
+            text: `Found ${searchResult.matchedProducts.length} items: ${searchResult.matchedProducts.map(p => p.name).join(', ')}`
+          }
+        ]);
+      }
     }
   };
+
+  const lastQuoteIdx = messages.map(m => Boolean(m.quote)).lastIndexOf(true);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn pb-16">
@@ -195,76 +218,82 @@ export const AIBuyerSimulator: React.FC<AIBuyerSimulatorProps> = ({ onInitiateCh
                   ? 'bg-[#0f63ed] text-white font-medium shadow-sm' 
                   : 'bg-slate-100/90 text-slate-800 border border-slate-200/60'
               }`}>
-                <div className="flex items-center space-x-2">
-                  <Bot className={`w-3.5 h-3.5 ${msg.sender === 'user' ? 'text-blue-200' : 'text-[#0f63ed]'}`} />
-                  <span className="font-bold font-mono uppercase text-[10px] opacity-80">
-                    {msg.sender === 'user' ? 'Customer Shopping Intent' : 'AI Buyer Assistant'}
-                  </span>
-                </div>
-                <p className="leading-relaxed">{msg.text}</p>
-
-                {msg.quote && msg.items && (
-                  <div className="mt-3 p-3 bg-white rounded-xl border border-blue-200 text-slate-900 space-y-2 font-mono text-[11px]">
-                    <div className="flex justify-between items-center font-bold text-blue-900 border-b border-blue-100 pb-1.5">
-                      <span>QUOTE #{msg.quote.quoteNumber}</span>
-                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">POLICY APPROVED</span>
-                    </div>
-                    {msg.items.map(i => (
-                      <div key={i.id} className="flex justify-between">
-                        <span>{i.name}</span>
-                        <span className="font-bold">₹{i.price.toLocaleString()}</span>
-                      </div>
-                    ))}
-                    <div className="pt-2 border-t border-slate-200 flex justify-between font-extrabold text-xs text-[#0f63ed]">
-                      <span>Final Total:</span>
-                      <span>₹{msg.quote.total.toLocaleString()}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const q = msg.quote || activeQuote;
-                        const items = msg.items || matchedProducts;
-
-                        if (q?.id) {
-                          try {
-                            fetch(getApiUrl('/api/agent-commerce/approve'), {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ quoteId: q.id, userApproved: true })
-                            }).then(() => {
-                              fetch(getApiUrl('/api/agent-commerce/order'), {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ quoteId: q.id })
-                              });
-                            }).catch(() => {});
-                          } catch (_) {}
-                        }
-
-                        onInitiateCheckout({
-                          bundleTitle: `Quote #${q?.quoteNumber || 'QT-1001'}`,
-                          items: items && items.length > 0 ? items : [aiAgentEngine.getProducts()[0]],
-                          originalAmount: q?.subtotal || 2499,
-                          finalAmount: q?.total || 2299,
-                          discountAmount: q?.discount || 200,
-                          quoteId: q?.id || 'quote_1',
-                          auditSteps: typeof auditLogger.getAuditSteps === 'function' ? auditLogger.getAuditSteps() : []
-                        });
-                      }}
-                      className="mt-2 w-full saas-button-primary py-2.5 flex items-center justify-center space-x-1.5 text-xs shadow-md shadow-blue-500/20 cursor-pointer"
-                    >
-                      <span>Approve & Pay ₹{(msg.quote?.total || 2299).toLocaleString()}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="flex items-center space-x-2">
+                    <Bot className={`w-3.5 h-3.5 ${msg.sender === 'user' ? 'text-blue-200' : 'text-[#0f63ed]'}`} />
+                    <span className="font-bold font-mono uppercase text-[10px] opacity-80">
+                      {msg.sender === 'user' ? 'Customer Shopping Intent' : 'AI Buyer Assistant'}
+                    </span>
                   </div>
-                )}
+                  <p className="leading-relaxed">{msg.text}</p>
+
+                  {msg.quote && msg.items && (
+                    <div className="mt-3 p-3 bg-white rounded-xl border border-blue-200 text-slate-900 space-y-2 font-mono text-[11px]">
+                      <div className="flex justify-between items-center font-bold text-blue-900 border-b border-blue-100 pb-1.5">
+                        <span>QUOTE #{msg.quote.quoteNumber}</span>
+                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">POLICY APPROVED</span>
+                      </div>
+                      {msg.items.map(i => (
+                        <div key={i.id} className="flex justify-between">
+                          <span>{i.name}</span>
+                          <span className="font-bold">₹{i.price.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div className="pt-2 border-t border-slate-200 flex justify-between font-extrabold text-xs text-[#0f63ed]">
+                        <span>Final Total:</span>
+                        <span>₹{msg.quote.total.toLocaleString()}</span>
+                      </div>
+
+                      {idx === lastQuoteIdx ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const q = msg.quote || activeQuote;
+                            const items = msg.items || matchedProducts;
+
+                            if (q?.id) {
+                              try {
+                                fetch(getApiUrl('/api/agent-commerce/approve'), {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ quoteId: q.id, userApproved: true })
+                                }).then(() => {
+                                  fetch(getApiUrl('/api/agent-commerce/order'), {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ quoteId: q.id })
+                                  });
+                                }).catch(() => {});
+                              } catch (_) {}
+                            }
+
+                            onInitiateCheckout({
+                              bundleTitle: `Quote #${q?.quoteNumber || 'QT-1001'}`,
+                              items: items && items.length > 0 ? items : [aiAgentEngine.getProducts()[0]],
+                              originalAmount: q?.subtotal || 2499,
+                              finalAmount: q?.total || 2299,
+                              discountAmount: q?.discount || 200,
+                              quoteId: q?.id || 'quote_1',
+                              auditSteps: typeof auditLogger.getAuditSteps === 'function' ? auditLogger.getAuditSteps() : []
+                            });
+                          }}
+                          className="mt-2 w-full saas-button-primary py-2.5 flex items-center justify-center space-x-1.5 text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                        >
+                          <span>Approve & Pay ₹{(msg.quote?.total || 2299).toLocaleString()}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <div className="mt-2 text-center text-[10px] font-mono text-slate-400 py-1 bg-slate-50 rounded border border-slate-100">
+                          ✓ Quote Issued
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
         {/* Live As-You-Type Recommendations Dropdown */}
         {inputQuery.trim().length > 0 && liveRecommendations.length > 0 && (
