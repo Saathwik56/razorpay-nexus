@@ -1,31 +1,30 @@
-# Production Dockerfile for Razorpay Nexus
+# Dockerfile - works for both Render and local Docker
 FROM node:20-alpine
 
-# Install OpenSSL & libc for Prisma engine compatibility on Alpine
+# Required for Prisma on Alpine
 RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
-# Production environment variables
-ENV NODE_ENV=production
-ENV PORT=3001
-ENV DATABASE_URL="file:./dev.db"
-
-# Copy package manifests & Prisma schema
+# Install dependencies first (layer cache)
 COPY package*.json ./
+RUN npm install --include=dev
+
+# Copy prisma schema
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN npm ci
+# Set DATABASE_URL BEFORE prisma generate (required by Prisma even for code generation)
+ENV DATABASE_URL="file:/tmp/dev.db"
+ENV NODE_ENV=production
+ENV PORT=3001
 
-# Copy full application source
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy rest of source code
 COPY . .
 
-# Generate Prisma Client & Build Vite bundle
-RUN npx prisma generate
-RUN npm run build
-
-EXPOSE 5173
 EXPOSE 3001
 
-CMD ["node", "scripts/docker-start.js"]
+# Start the server via render-start.js (handles db push + seed + server)
+CMD ["node", "scripts/render-start.js"]
